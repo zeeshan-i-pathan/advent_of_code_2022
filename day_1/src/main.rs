@@ -143,9 +143,7 @@ use itertools::Itertools;
 // //   Range (min … max):     1.9 ms …   3.0 ms    1289 runs
 
 fn main() {
-    let input = include_str!("input.txt");
-    // Solution to Part 1
-    let max = input
+    let answer = include_str!("input.txt")
         .lines()
         .map(|v| v.parse::<u64>().ok()) // batching method is from the itertools crarte
         .batching(|it| {
@@ -155,25 +153,15 @@ fn main() {
             }
             sum
         })
-        .max()
-        .unwrap_or_default();
+        .sorted_by_key(|&v| std::cmp::Reverse(v));
+
+    // Solution to Part 1
+    let max = answer.clone().max().unwrap_or_default();
     println!("Part 1 Solution {max}");
 
     // Solution to Part 2
-    let answer = input
-        .lines()
-        .map(|v| v.parse::<u64>().ok()) // batching method is from the itertools crarte
-        .batching(|it| {
-            let mut sum = None;
-            while let Some(Some(v)) = it.next() {
-                sum = Some(sum.unwrap_or(0) + v);
-            }
-            sum
-        })
-        .sorted_by_key(|&v| std::cmp::Reverse(v))
-        .take(3)
-        .sum::<u64>();
-    println!("Part 2 Solution {answer}");
+    let answer = answer.take(3).sum::<u64>();
+    println!("Part 2 Solution {answer:?}");
 }
 // // Benchmarked with Hyperfine
 // // hyperfine ./target/release/day_1 --shell=none --warmup 100

@@ -1,5 +1,6 @@
-pub fn process_part1(input: &str) -> String {
+pub fn process_part1(input: &str) -> u64 {
     let result: u64 = input
+        .replace("\r\n", "\n")
         .split("\n\n")
         .map(|load| {
             load.lines()
@@ -8,11 +9,12 @@ pub fn process_part1(input: &str) -> String {
         })
         .max()
         .unwrap();
-    result.to_string()
+    result
 }
 
-pub fn process_part2(input: &str) -> String {
+pub fn process_part2(input: &str) -> u64 {
     let mut result = input
+        .replace("\r\n", "\n")
         .split("\n\n")
         .map(|load| {
             load.lines()
@@ -23,7 +25,7 @@ pub fn process_part2(input: &str) -> String {
     result.sort_by(|a, b| b.cmp(a));
     let sum = result.iter().take(3).sum::<u64>();
     // dbg!(result);
-    sum.to_string()
+    sum
 }
 
 #[cfg(test)]
@@ -46,12 +48,12 @@ mod tests {
     #[test]
     fn part1_test() {
         let result = process_part1(INPUT);
-        assert_eq!(result, "24000");
+        assert_eq!(result, 24000);
     }
 
     #[test]
     fn part2_test() {
         let result = process_part2(INPUT);
-        assert_eq!(result, "45000");
+        assert_eq!(result, 45000);
     }
 }

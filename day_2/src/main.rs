@@ -1,6 +1,4 @@
-use std::{fmt::Error, str::FromStr};
-
-use itertools::ProcessResults;
+use std::str::FromStr;
 
 #[derive(Debug, Clone, Copy)]
 enum Move {
@@ -75,8 +73,8 @@ impl Round {
         self.ours.outcome(self.theirs)
     }
 
-    fn our_score(self) -> u8 {
-        self.ours as u8 + self.outcome() as u8
+    fn our_score(self) -> u16 {
+        self.ours as u16 + self.outcome() as u16
     }
 }
 
@@ -149,7 +147,7 @@ fn main() {
     // Benchmark 1: target/debug/day_2
     // Time (mean ± σ):       2.1 ms ±   0.2 ms    [User: 0.7 ms, System: 0.5 ms]
     // Range (min … max):     1.8 ms …   3.4 ms    1606 runs
-    let total_score: u8 = itertools::process_results(
+    let total_score: u16 = itertools::process_results(
         include_str!("input.txt")
             .lines()
             .map(Round::from_str)

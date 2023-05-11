@@ -1,6 +1,36 @@
 use std::str::FromStr;
 
 #[derive(Debug, Clone, Copy)]
+enum Outcome {
+    Win = 6,
+    Draw = 3,
+    Loss = 0,
+}
+
+impl TryFrom<char> for Outcome {
+    type Error = String;
+
+    fn try_from(value: char) -> Result<Self, Self::Error> {
+        match value {
+            'X' => Ok(Outcome::Loss),
+            'Y' => Ok(Outcome::Draw),
+            'Z' => Ok(Outcome::Win),
+            _ => Err("Not a valid outcome".to_string()),
+        }
+    }
+}
+
+impl Outcome {
+    fn matching_move(self, theirs: Move) -> Move {
+        match self {
+            Outcome::Draw => theirs.drawing_move(),
+            Outcome::Loss => theirs.losing_move(),
+            Outcome::Win => theirs.winning_move(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
 enum Move {
     Rock = 1,
     Paper = 2,
@@ -15,18 +45,14 @@ impl TryFrom<char> for Move {
             'A' | 'X' => Ok(Move::Rock),
             'B' | 'Y' => Ok(Move::Paper),
             'C' | 'Z' => Ok(Move::Scissors),
-            _ => Err("Not a valid move {value:?}".to_string()),
+            _ => Err("Not a valid move".to_string()),
         }
     }
 }
 
-enum Outcome {
-    Win = 6,
-    Draw = 3,
-    Loss = 0,
-}
-
 impl Move {
+    const ALL_MOVES: [Move; 3] = [Move::Rock, Move::Paper, Move::Scissors];
+
     fn beats(self, other: Move) -> bool {
         matches!(
             (self, other),
@@ -45,12 +71,29 @@ impl Move {
             Outcome::Draw
         }
     }
+
+    fn winning_move(self) -> Self {
+        *Self::ALL_MOVES
+            .iter()
+            // .copied()
+            .find(|m| m.beats(self))
+            .unwrap()
+    }
+
+    fn losing_move(self) -> Self {
+        *Self::ALL_MOVES.iter().find(|m| self.beats(**m)).unwrap()
+    }
+
+    fn drawing_move(self) -> Self {
+        self
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
 struct Round {
     theirs: Move,
     ours: Move,
+    outcome: Outcome,
 }
 
 impl FromStr for Round {
@@ -64,6 +107,7 @@ impl FromStr for Round {
         Ok(Self {
             theirs: theirs.try_into().unwrap(),
             ours: ours.try_into().unwrap(),
+            outcome: ours.try_into().unwrap(),
         })
     }
 }
@@ -147,7 +191,7 @@ fn main() {
     // Benchmark 1: target/debug/day_2
     // Time (mean ± σ):       2.1 ms ±   0.2 ms    [User: 0.7 ms, System: 0.5 ms]
     // Range (min … max):     1.8 ms …   3.4 ms    1606 runs
-    let total_score: u16 = itertools::process_results(
+    let part_1_score: u16 = itertools::process_results(
         include_str!("input.txt")
             .lines()
             .map(Round::from_str)
@@ -155,5 +199,19 @@ fn main() {
         |it| it.sum(),
     )
     .unwrap();
-    dbg!(total_score);
+    dbg!(part_1_score);
+
+    let part_2_score: u16 = itertools::process_results(
+        include_str!("input.txt")
+            .lines()
+            .map(Round::from_str)
+            .map_ok(|i| {
+                let mut round = i;
+                round.ours = round.outcome.matching_move(round.theirs);
+                return round.our_score();
+            }),
+        |it| it.sum(),
+    )
+    .unwrap();
+    dbg!(part_2_score);
 }

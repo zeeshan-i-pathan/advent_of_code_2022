@@ -37,6 +37,12 @@ enum Move {
     Scissors = 3,
 }
 
+impl PartialEq for Move {
+    fn eq(&self, other: &Self) -> bool {
+        core::mem::discriminant(self) == core::mem::discriminant(other)
+    }
+}
+
 impl TryFrom<char> for Move {
     type Error = String;
 
@@ -51,15 +57,50 @@ impl TryFrom<char> for Move {
 }
 
 impl Move {
-    const ALL_MOVES: [Move; 3] = [Move::Rock, Move::Paper, Move::Scissors];
+    // const ALL_MOVES: [Move; 3] = [Move::Rock, Move::Paper, Move::Scissors];
+
+    // Putting the Beating combination in one place as
+    const MOVE_MATCH: [(Move, Move); 3] = [
+        (Move::Rock, Move::Scissors),
+        (Move::Paper, Move::Rock),
+        (Move::Scissors, Move::Paper),
+    ];
 
     fn beats(self, other: Move) -> bool {
-        matches!(
-            (self, other),
-            (Self::Rock, Self::Scissors)
-                | (Self::Paper, Self::Rock)
-                | (Self::Scissors, Self::Paper)
-        )
+        // // Hardcoded Match other functions need to depend on this function and the ALL_MOVES array
+        // matches!(
+        //     (self, other),
+        //     (Self::Rock, Self::Scissors)
+        //         | (Self::Paper, Self::Rock)
+        //         | (Self::Scissors, Self::Paper)
+        // )
+
+        // // Another way to do beats. but too many get().unwraps
+        // if (self, other) == *Self::MOVE_MATCH.get(0).unwrap()
+        //     || (self, other) == *Self::MOVE_MATCH.get(1).unwrap()
+        //     || (self, other) == *Self::MOVE_MATCH.get(2).unwrap()
+        // {
+        //     true
+        // } else {
+        //     false
+        // }
+
+        // // I like this way of computing beats
+        match Self::MOVE_MATCH
+            .iter()
+            .find(|tuple| (self, other) == **tuple)
+        {
+            Some(_) => true,
+            None => false,
+        }
+
+        // Imperative way also works
+        // for beating_moves in Self::MOVE_MATCH {
+        //     if (self, other) == beating_moves {
+        //         return true;
+        //     }
+        // }
+        // return false;
     }
 
     fn outcome(self, theirs: Move) -> Outcome {
@@ -73,18 +114,56 @@ impl Move {
     }
 
     fn winning_move(self) -> Self {
-        *Self::ALL_MOVES
-            .iter()
-            // .copied()
-            .find(|m| m.beats(self))
-            .unwrap()
+        // // Looping ALL_MOVES and then calling beats to find beating move
+        // *Self::ALL_MOVES
+        //     .iter()
+        //     // .copied()
+        //     .find(|m| m.beats(self))
+        //     .unwrap()
+
+        // Doing the same but with a MOVE_MATCH constant
+        Self::MOVE_MATCH.iter().find(|m| self == m.1).unwrap().0
+
+        // if self == Self::MOVE_MATCH.get(0).unwrap().1 {
+        //     Self::MOVE_MATCH.get(0).unwrap().0
+        // } else if self == Self::MOVE_MATCH.get(1).unwrap().1 {
+        //     Self::MOVE_MATCH.get(1).unwrap().0
+        // } else {
+        // Self::MOVE_MATCH.get(2).unwrap().0
+        // }
+
+        // match self {
+        //     Move::Rock => Move::Paper,
+        //     Move::Paper => Move::Scissors,
+        //     Move::Scissors => Move::Rock,
+        // }
     }
 
     fn losing_move(self) -> Self {
-        *Self::ALL_MOVES.iter().find(|m| self.beats(**m)).unwrap()
+        // // Looping ALL_MOVES and calling beats to find losing move
+        // *Self::ALL_MOVES.iter().find(|m| self.beats(**m)).unwrap()
+
+        // Doing the same but with MOVE_MATCH conts & first item in tuple instead of comparing the entire tuple
+        // Need to implement PartialEq on tuple for this to work
+        Self::MOVE_MATCH.iter().find(|m| self == m.0).unwrap().1
+
+        // if self == Self::MOVE_MATCH.get(0).unwrap().0 {
+        //     Self::MOVE_MATCH.get(0).unwrap().1
+        // } else if self == Self::MOVE_MATCH.get(1).unwrap().0 {
+        //     Self::MOVE_MATCH.get(1).unwrap().1
+        // } else {
+        //     Self::MOVE_MATCH.get(2).unwrap().1
+        // }
+
+        // match self {
+        //     Move::Rock => Move::Scissors,
+        //     Move::Paper => Move::Rock,
+        //     Move::Scissors => Move::Paper,
+        // }
     }
 
     fn drawing_move(self) -> Self {
+        // Nothing to do here (Garbage in Garbage out)
         self
     }
 }

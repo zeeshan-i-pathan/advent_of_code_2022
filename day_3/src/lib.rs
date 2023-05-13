@@ -1,18 +1,18 @@
 trait Score {
-    fn score(self) -> u8;
+    fn score(self) -> usize;
 }
 
 impl Score for char {
-    fn score(self) -> u8 {
+    fn score(self) -> usize {
         match self {
-            ('a'..='z') => self as u8 + 1 - b'a',
-            ('A'..='Z') => self as u8 + 27 - b'A',
+            ('a'..='z') => self as usize + 1 - b'a' as usize,
+            ('A'..='Z') => self as usize + 27 - b'A' as usize,
             _ => 0,
         }
     }
 }
 
-pub fn part_1_score(input: &str) -> u8 {
+pub fn part_1_score(input: &str) -> usize {
     input
         .lines()
         .map(|line| {
@@ -25,7 +25,7 @@ pub fn part_1_score(input: &str) -> u8 {
         })
         // .map(|bags| bags.0.chars().find(|item| bags.1.contains(*item)))
         // .map(|mat| Point::try_from(mat.unwrap_or('a') as u8).unwrap().0)
-        .sum::<u8>()
+        .sum::<usize>()
 
     // let mut score: usize = 0;
     // for line in input.lines() {

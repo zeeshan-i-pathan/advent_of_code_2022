@@ -8,6 +8,6 @@ cargo test
 
 __To run the Solution__
 
-cargo run --bin part_1
+*cargo run --bin part_1*
 or
-cargo run --bin part_2
+*cargo run --bin part_2*

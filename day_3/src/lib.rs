@@ -1,3 +1,7 @@
+use std::collections::HashSet;
+
+use itertools::Itertools;
+
 trait Score {
     fn score(self) -> usize;
 }
@@ -56,24 +60,39 @@ pub fn part_2_score(input: &str) -> usize {
     // dbg!(iter.next());
 
     // Hyperfine Benchmark 1: target/debug/part_2
-    // Time (mean ± σ):       2.2 ms ±   0.2 ms    [User: 0.8 ms, System: 0.5 ms]
-    // Range (min … max):     1.9 ms …   3.3 ms    1229 runs
-    let line_vec: Vec<&str> = input.lines().collect();
-    let mut rucksacks = line_vec.chunks(3);
-    let mut score = 0;
-    loop {
-        match rucksacks.next() {
-            Some(rucksack) => {
-                score += rucksack[0]
-                    .chars()
-                    .find(|item| rucksack[1].contains(*item) && rucksack[2].contains(*item))
-                    .unwrap_or_default()
-                    .score();
-            }
-            None => break,
-        };
-    }
-    return score;
+    // Time (mean ± σ):       3.1 ms ±   0.2 ms    [User: 1.6 ms, System: 0.5 ms]
+    // Range (min … max):     2.8 ms …   4.1 ms    1001 runs
+    input
+        .lines()
+        .map(|line| line.chars().collect::<Vec<char>>())
+        .tuples()
+        .map(|(a, b, c)| {
+            a.iter()
+                .find(|i| b.contains(i) && c.contains(i))
+                .unwrap()
+                .score()
+        })
+        .sum::<usize>()
+
+    // // Hyperfine Benchmark 1: target/debug/part_2
+    // // Time (mean ± σ):       2.2 ms ±   0.2 ms    [User: 0.8 ms, System: 0.5 ms]
+    // // Range (min … max):     1.9 ms …   3.3 ms    1229 runs
+    // let line_vec: Vec<&str> = input.lines().collect();
+    // let mut rucksacks = line_vec.chunks(3);
+    // let mut score = 0;
+    // loop {
+    //     match rucksacks.next() {
+    //         Some(rucksack) => {
+    //             score += rucksack[0]
+    //                 .chars()
+    //                 .find(|item| rucksack[1].contains(*item) && rucksack[2].contains(*item))
+    //                 .unwrap_or_default()
+    //                 .score();
+    //         }
+    //         None => break,
+    //     };
+    // }
+    // return score;
 }
 
 #[cfg(test)]

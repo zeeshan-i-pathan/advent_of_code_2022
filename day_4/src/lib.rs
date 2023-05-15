@@ -1,6 +1,10 @@
 use std::{collections::HashSet, str::FromStr};
 
-struct OverLapPair(usize);
+#[derive(Debug)]
+struct OverLapPair {
+    complete_overlap: usize,
+    partial_overlap: usize,
+}
 
 impl FromStr for OverLapPair {
     type Err = String;
@@ -15,12 +19,45 @@ impl FromStr for OverLapPair {
         let end_1: u8 = end_1.parse().unwrap();
         let start_2: u8 = start_2.parse().unwrap();
         let end_2: u8 = end_2.parse().unwrap();
-        if start_1 <= start_2 && end_1 >= end_2 {
-            return Ok(OverLapPair(1));
-        } else if start_2 <= start_1 && end_2 >= end_1 {
-            return Ok(OverLapPair(1));
+        if start_1 <= start_2 {
+            if end_1 >= end_2 {
+                return Ok(Self {
+                    complete_overlap: 1,
+                    partial_overlap: 1,
+                });
+            } else if end_1 < start_2 {
+                return Ok(Self {
+                    complete_overlap: 0,
+                    partial_overlap: 0,
+                });
+            } else {
+                return Ok(Self {
+                    complete_overlap: 0,
+                    partial_overlap: 1,
+                });
+            }
+        } else if start_2 <= start_1 {
+            if end_2 >= end_1 {
+                return Ok(Self {
+                    complete_overlap: 1,
+                    partial_overlap: 1,
+                });
+            } else if end_2 < start_1 {
+                return Ok(Self {
+                    complete_overlap: 0,
+                    partial_overlap: 0,
+                });
+            } else {
+                return Ok(Self {
+                    complete_overlap: 0,
+                    partial_overlap: 1,
+                });
+            }
         } else {
-            return Ok(OverLapPair(0));
+            return Ok(Self {
+                complete_overlap: 0,
+                partial_overlap: 0,
+            });
         }
     }
 }
@@ -73,10 +110,29 @@ pub fn part_1_process(input: &str) -> usize {
     input
         .lines()
         .map(|line| {
-            let over_lap = line.parse::<OverLapPair>().unwrap_or(OverLapPair(0));
-            over_lap.0
+            let over_lap = line.parse::<OverLapPair>().unwrap_or(OverLapPair {
+                complete_overlap: 0,
+                partial_overlap: 0,
+            });
+            over_lap.complete_overlap
         })
-        .sum::<usize>()
+        .sum()
+}
+
+pub fn part_2_process(input: &str) -> usize {
+    // Benchmark 1: target/debug/part_2
+    // Time (mean ± σ):       2.6 ms ±   0.2 ms    [User: 1.2 ms, System: 0.5 ms]
+    // Range (min … max):     2.3 ms …   3.7 ms    1235 runs
+    input
+        .lines()
+        .map(|line| {
+            let over_lap = line.parse::<OverLapPair>().unwrap_or(OverLapPair {
+                complete_overlap: 0,
+                partial_overlap: 0,
+            });
+            over_lap.partial_overlap
+        })
+        .sum()
 }
 
 #[cfg(test)]
@@ -93,5 +149,11 @@ mod tests {
     fn part1_test() {
         let result = part_1_process(INPUT);
         assert_eq!(result, 2);
+    }
+
+    #[test]
+    fn part2_test() {
+        let result: usize = part_2_process(INPUT);
+        assert_eq!(result, 4);
     }
 }

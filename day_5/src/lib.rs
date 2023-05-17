@@ -1,10 +1,13 @@
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take, take_while1},
+    bytes::complete::{tag, take},
+    character::complete::digit1,
     combinator::{all_consuming, map, map_res, opt},
+    multi::separated_list1,
     sequence::{delimited, preceded, tuple},
     Finish, IResult,
 };
+use smallvec::SmallVec;
 
 #[derive(Debug)]
 struct Crate(char);
@@ -24,18 +27,21 @@ fn parse_crate_or_hole(i: &str) -> IResult<&str, Option<char>> {
 }
 
 fn parse_crate_line(i: &str) -> IResult<&str, Vec<Option<char>>> {
-    let (mut i, c) = parse_crate_or_hole(i)?;
-    let mut v = vec![c];
-    loop {
-        let (next_i, maybe_c) = opt(preceded(tag(" "), parse_crate_or_hole))(i)?;
-        match maybe_c {
-            Some(c) => v.push(c),
-            None => break,
-        }
-        i = next_i
-    }
+    // let (mut i, c) = parse_crate_or_hole(i)?;
+    // let mut v = vec![c];
+    // loop {
+    //     let (next_i, maybe_c) = opt(preceded(tag(" "), parse_crate_or_hole))(i)?;
+    //     match maybe_c {
+    //         Some(c) => v.push(c),
+    //         None => break,
+    //     }
+    //     i = next_i
+    // }
 
-    Ok((i, v))
+    // Ok((i, v))
+
+    // Simplifying the above complicated logic with this one line
+    separated_list1(tag(" "), parse_crate_or_hole)(i)
 }
 
 fn rev_transpose<T>(v: Vec<Vec<Option<T>>>) -> Vec<Vec<T>> {
@@ -44,18 +50,18 @@ fn rev_transpose<T>(v: Vec<Vec<Option<T>>>) -> Vec<Vec<T>> {
     let mut iters: Vec<_> = v.into_iter().map(|n| n.into_iter()).collect();
     (0..len)
         .map(|_| {
-            iters
-                .iter_mut()
-                .rev()
-                .filter_map(|n| n.next().unwrap())
-                .collect::<Vec<T>>()
+            // Vec::with_capacity will help us get rid of the reallocations that would have happened while moving crates around when we apply instructions
+            let mut v = Vec::with_capacity(256);
+            v.extend(iters.iter_mut().rev().filter_map(|n| n.next().unwrap()));
+            v
+            // .collect::<Vec<T>>()
         })
         .collect()
 }
 
 fn parse_num(i: &str) -> IResult<&str, usize> {
     let f = |s: &str| s.parse::<usize>();
-    map_res(take_while1(|c: char| c.is_ascii_digit()), f)(i)
+    map_res(digit1, f)(i)
 }
 
 fn parse_pile_num(i: &str) -> IResult<&str, usize> {
@@ -83,12 +89,18 @@ impl AppInstruction for Vec<Vec<char>> {
     }
 
     fn instruct_part_2(&mut self, ins: Instruction) {
-        let mut a = (0..ins.quantity)
+        // let mut a = (0..ins.quantity)
+        for c in (0..ins.quantity)
             .map(|_| self[ins.src].pop().unwrap())
-            .collect::<Vec<char>>();
-        for _ in 0..ins.quantity {
-            let el = a.pop().unwrap();
-            self[ins.dst].push(el);
+            // .collect::<Vec<char>>();
+            // Using SmallVec for Stack Allocation because we are never moving more than 35 items
+            .collect::<SmallVec<[char; 64]>>()
+            .into_iter()
+            .rev()
+        {
+            // for _ in 0..ins.quantity {
+            // let el = a.pop().unwrap();
+            self[ins.dst].push(c);
         }
     }
 }
@@ -116,7 +128,7 @@ fn parse_input(input: &str) -> (Vec<Vec<char>>, Vec<Instruction>) {
         .collect();
     dbg!(lines.next().unwrap().is_empty());
     // dbg!(&crate_lines);
-    let mut crate_columns = rev_transpose(crate_lines);
+    let crate_columns = rev_transpose(crate_lines);
     // dbg!(&crate_columns);
     // for (index, col) in crate_columns.iter().enumerate() {
     //     println!("Pile {index} - {col:?}");

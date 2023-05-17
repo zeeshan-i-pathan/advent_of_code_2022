@@ -17,48 +17,68 @@ impl FromStr for OverLapPair {
         };
         let start_1: u8 = start_1.parse().unwrap();
         let end_1: u8 = end_1.parse().unwrap();
+        let first = start_1..=end_1;
         let start_2: u8 = start_2.parse().unwrap();
         let end_2: u8 = end_2.parse().unwrap();
-        if start_1 <= start_2 {
-            if end_1 >= end_2 {
-                return Ok(Self {
-                    complete_overlap: 1,
-                    partial_overlap: 1,
-                });
-            } else if end_1 < start_2 {
-                return Ok(Self {
-                    complete_overlap: 0,
-                    partial_overlap: 0,
-                });
-            } else {
-                return Ok(Self {
-                    complete_overlap: 0,
-                    partial_overlap: 1,
-                });
-            }
-        } else if start_2 <= start_1 {
-            if end_2 >= end_1 {
-                return Ok(Self {
-                    complete_overlap: 1,
-                    partial_overlap: 1,
-                });
-            } else if end_2 < start_1 {
-                return Ok(Self {
-                    complete_overlap: 0,
-                    partial_overlap: 0,
-                });
-            } else {
-                return Ok(Self {
-                    complete_overlap: 0,
-                    partial_overlap: 1,
-                });
-            }
-        } else {
-            return Ok(Self {
-                complete_overlap: 0,
-                partial_overlap: 0,
-            });
+        let second = start_2..=end_2;
+        let mut ret = Self {
+            complete_overlap: 0,
+            partial_overlap: 0,
+        };
+        if (first.contains(second.start()) && first.contains(second.end()))
+            || (second.contains(first.start()) && second.contains(first.end()))
+        {
+            ret.complete_overlap = 1;
         }
+
+        if first.contains(second.start())
+            || first.contains(second.end())
+            || second.contains(first.start())
+            || second.contains(first.end())
+        {
+            ret.partial_overlap = 1;
+        }
+        Ok(ret)
+        // if start_1 <= start_2 {
+        //     if end_1 >= end_2 {
+        //         return Ok(Self {
+        //             complete_overlap: 1,
+        //             partial_overlap: 1,
+        //         });
+        //     } else if end_1 < start_2 {
+        //         return Ok(Self {
+        //             complete_overlap: 0,
+        //             partial_overlap: 0,
+        //         });
+        //     } else {
+        //         return Ok(Self {
+        //             complete_overlap: 0,
+        //             partial_overlap: 1,
+        //         });
+        //     }
+        // } else if start_2 <= start_1 {
+        //     if end_2 >= end_1 {
+        //         return Ok(Self {
+        //             complete_overlap: 1,
+        //             partial_overlap: 1,
+        //         });
+        //     } else if end_2 < start_1 {
+        //         return Ok(Self {
+        //             complete_overlap: 0,
+        //             partial_overlap: 0,
+        //         });
+        //     } else {
+        //         return Ok(Self {
+        //             complete_overlap: 0,
+        //             partial_overlap: 1,
+        //         });
+        //     }
+        // } else {
+        //     return Ok(Self {
+        //         complete_overlap: 0,
+        //         partial_overlap: 0,
+        //     });
+        // }
     }
 }
 

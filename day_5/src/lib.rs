@@ -1,3 +1,5 @@
+#![feature(get_many_mut)]
+
 use nom::{
     branch::alt,
     bytes::complete::{tag, take},
@@ -89,19 +91,24 @@ impl AppInstruction for Vec<Vec<char>> {
     }
 
     fn instruct_part_2(&mut self, ins: Instruction) {
-        // let mut a = (0..ins.quantity)
-        for c in (0..ins.quantity)
-            .map(|_| self[ins.src].pop().unwrap())
-            // .collect::<Vec<char>>();
-            // Using SmallVec for Stack Allocation because we are never moving more than 35 items
-            .collect::<SmallVec<[char; 64]>>()
-            .into_iter()
-            .rev()
-        {
-            // for _ in 0..ins.quantity {
-            // let el = a.pop().unwrap();
-            self[ins.dst].push(c);
-        }
+        // // let mut a = (0..ins.quantity)
+        // for c in (0..ins.quantity)
+        //     .map(|_| self[ins.src].pop().unwrap())
+        //     // .collect::<Vec<char>>();
+        //     // Using SmallVec for Stack Allocation because we are never moving more than 35 items
+        //     .collect::<SmallVec<[char; 64]>>()
+        //     .into_iter()
+        //     .rev()
+        // {
+        //     // for _ in 0..ins.quantity {
+        //     // let el = a.pop().unwrap();
+        //     self[ins.dst].push(c);
+        // }
+
+        let [src, dst] = self.get_many_mut([ins.src, ins.dst]).unwrap();
+
+        // using drain and extend
+        dst.extend(src.drain((src.len() - ins.quantity)..))
     }
 }
 
@@ -214,29 +221,29 @@ move 1 from 1 to 2";
         let result = part2_process(INPUT);
         assert_eq!(result, "MCD");
     }
-}
 
-#[test]
-fn parse_crate_test() {
-    assert_eq!(Ok(("", 'D')), parse_crate("[D]"));
-}
+    #[test]
+    fn parse_crate_test() {
+        assert_eq!(Ok(("", 'D')), parse_crate("[D]"));
+    }
 
-#[test]
-fn parse_hole_test() {
-    assert_eq!(parse_hole("   "), Ok(("", ())));
-}
+    #[test]
+    fn parse_hole_test() {
+        assert_eq!(parse_hole("   "), Ok(("", ())));
+    }
 
-#[test]
-fn parse_crate_or_hole_test() {
-    assert_eq!(parse_crate_or_hole("   "), Ok(("", None,),));
-    assert_eq!(parse_crate_or_hole("[F]"), Ok(("", Some('F'),),));
-    assert_eq!(opt(parse_crate_or_hole)(""), Ok(("", None)));
-}
+    #[test]
+    fn parse_crate_or_hole_test() {
+        assert_eq!(parse_crate_or_hole("   "), Ok(("", None,),));
+        assert_eq!(parse_crate_or_hole("[F]"), Ok(("", Some('F'),),));
+        assert_eq!(opt(parse_crate_or_hole)(""), Ok(("", None)));
+    }
 
-#[test]
-fn parse_crate_line_test() {
-    assert_eq!(
-        parse_crate_line("[F]     [G]"),
-        Ok(("", vec![Some('F',), None, Some('G',),],),)
-    );
+    #[test]
+    fn parse_crate_line_test() {
+        assert_eq!(
+            parse_crate_line("[F]     [G]"),
+            Ok(("", vec![Some('F',), None, Some('G',),],),)
+        );
+    }
 }
